@@ -1,0 +1,201 @@
+{
+  "meta": {
+    "day_index": 1,
+    "unit_id": "u1",
+    "note": "M0 手写日：契约样例，不是 LLM 生成物"
+  },
+  "entities": [
+    {"id": "u1", "type": "Unit", "name": "林晚", "aliases": ["她"]},
+    {"id": "p1", "type": "Place", "name": "卧室"},
+    {"id": "per1", "type": "Person", "name": "周姐", "aliases": ["周敏", "那个发消息的人"]},
+    {"id": "o1", "type": "Object", "name": "笔记本电脑"},
+    {"id": "c1", "type": "Concept", "name": "季度汇报"}
+  ],
+  "holdings": [
+    {
+      "id": "h1", "s": "u1", "p": "located_in", "o": "p1", "o_kind": "entity",
+      "source": "world", "confidence": 1.0, "salience": 0.4,
+      "valid_from": "2026-11-01T18:40:00+08:00",
+      "asserted_at": "2026-11-01T18:40:00+08:00"
+    },
+    {
+      "id": "h2", "s": "o1", "p": "powered_on", "o": false, "o_kind": "literal",
+      "source": "world", "confidence": 1.0, "salience": 0.3,
+      "valid_from": "2026-11-01T18:40:00+08:00",
+      "asserted_at": "2026-11-01T18:40:00+08:00"
+    },
+    {
+      "id": "h3", "s": "c1", "p": "deadline", "o": "2026-11-06", "o_kind": "literal",
+      "source": "world", "confidence": 1.0, "salience": 0.7,
+      "valid_from": "2026-11-01T09:00:00+08:00",
+      "asserted_at": "2026-11-01T09:00:00+08:00"
+    },
+    {
+      "id": "h4", "s": "per1", "p": "colleague_of", "o": "u1", "o_kind": "entity",
+      "source": "world", "confidence": 1.0, "salience": 0.5,
+      "valid_from": "2026-11-01T09:00:00+08:00",
+      "asserted_at": "2026-11-01T09:00:00+08:00"
+    },
+    {
+      "id": "h5", "s": "u1", "p": "has_trait", "o": "尽责", "o_kind": "literal",
+      "source": "god", "unit_id": "u1", "confidence": 1.0, "salience": 1.0,
+      "valid_from": "2026-11-01T00:00:00+08:00",
+      "asserted_at": "2026-11-01T00:00:00+08:00"
+    },
+    {
+      "id": "h6", "s": "u1", "p": "has_need", "o": "被认可", "o_kind": "literal",
+      "source": "god", "unit_id": "u1", "confidence": 1.0, "salience": 1.0,
+      "valid_from": "2026-11-01T00:00:00+08:00",
+      "asserted_at": "2026-11-01T00:00:00+08:00"
+    },
+    {
+      "id": "h7", "s": "u1", "p": "has_open_loop", "o": "c1", "o_kind": "entity",
+      "source": "unit:u1", "unit_id": "u1", "confidence": 0.9, "salience": 0.8,
+      "valid_from": "2026-11-01T09:00:00+08:00",
+      "asserted_at": "2026-11-01T09:00:00+08:00"
+    },
+    {
+      "id": "h8", "s": "u1", "p": "emotion", "o": "疲惫", "o_kind": "literal",
+      "source": "unit:u1", "unit_id": "u1", "confidence": 0.8, "salience": 0.6,
+      "valid_from": "2026-11-01T18:40:00+08:00",
+      "asserted_at": "2026-11-01T18:40:00+08:00"
+    },
+    {
+      "id": "h9", "s": "u1", "p": "energy", "o": 0.35, "o_kind": "literal",
+      "source": "unit:u1", "unit_id": "u1", "confidence": 0.8, "salience": 0.6,
+      "valid_from": "2026-11-01T18:40:00+08:00",
+      "asserted_at": "2026-11-01T18:40:00+08:00"
+    }
+  ],
+  "events": [
+    {
+      "id": "e1", "time": "2026-11-01T19:00:00+08:00", "type": "occurrence",
+      "occurs": "open",
+      "roles": {"agent": "u1", "theme": "o1"},
+      "delta": {
+        "add": [
+          {
+            "s": "o1", "p": "powered_on", "o": true, "o_kind": "literal",
+            "source": "unit:u1", "salience": 0.3,
+            "valid_from": "2026-11-01T19:00:00+08:00"
+          }
+        ],
+        "retract": ["h2"]
+      },
+      "causal_parent": null,
+      "source": "unit:u1",
+      "raw_text": "她打开电脑"
+    },
+    {
+      "id": "e2", "time": "2026-11-01T20:10:00+08:00", "type": "message",
+      "occurs": "receive_message",
+      "roles": {"sender": "per1", "recipient": "u1", "theme": "c1", "channel": "手机信息流"},
+      "delta": {
+        "add": [
+          {
+            "s": "c1", "p": "deadline", "o": "2026-11-02", "o_kind": "literal",
+            "source": "unit:per1", "salience": 0.9,
+            "valid_from": "2026-11-01T20:10:00+08:00"
+          }
+        ],
+        "retract": ["h3"]
+      },
+      "causal_parent": "e1",
+      "source": "unit:per1",
+      "raw_text": "周姐：季度汇报提前到明天上午十点，今晚先过一遍第一页。"
+    },
+    {
+      "id": "e3", "time": "2026-11-01T21:00:00+08:00", "type": "occurrence",
+      "occurs": "work_on",
+      "roles": {"agent": "u1", "theme": "c1", "place": "p1", "instrument": "o1"},
+      "delta": {
+        "add": [
+          {
+            "s": "u1", "p": "focus_on", "o": "c1", "o_kind": "entity",
+            "source": "unit:u1", "salience": 0.8,
+            "valid_from": "2026-11-01T21:00:00+08:00"
+          },
+          {
+            "s": "c1", "p": "first_section_done", "o": true, "o_kind": "literal",
+            "source": "unit:u1", "salience": 0.7,
+            "valid_from": "2026-11-01T23:20:00+08:00",
+            "asserted_at": "2026-11-01T23:20:00+08:00"
+          }
+        ],
+        "retract": []
+      },
+      "causal_parent": "e2",
+      "source": "unit:u1",
+      "raw_text": "她把季度汇报的文档翻出来，改到第三遍"
+    }
+  ],
+  "perceptions": [
+    {
+      "id": "pe1", "event_id": "e1", "unit_id": "u1",
+      "attended": {"o1": 0.9, "u1": 0.4},
+      "transforms": [
+        {"op": "amplify", "target": "o1", "factor": 1.2, "reason": "need_play 长期未满足"}
+      ],
+      "affect": {"label": "satisfaction", "delta": 0.4, "reason": "终于可以放松一下"},
+      "confidence": 0.8,
+      "asserted_at": "2026-11-01T19:00:00+08:00"
+    },
+    {
+      "id": "pe2", "event_id": "e2", "unit_id": "u1",
+      "attended": {"per1": 0.8, "c1": 0.95},
+      "transforms": [
+        {"op": "amplify", "target": "c1", "factor": 1.5, "reason": "截止日期"},
+        {"op": "infer", "target": "per1", "to": "周姐是故意的", "confidence": 0.35}
+      ],
+      "affect": {"label": "anxiety", "delta": -0.6, "reason": "deadline 提前，失控感"},
+      "confidence": 0.7,
+      "asserted_at": "2026-11-01T20:10:00+08:00"
+    },
+    {
+      "id": "pe3", "event_id": "e3", "unit_id": "u1",
+      "attended": {"c1": 0.95, "o1": 0.3},
+      "transforms": [
+        {"op": "rewrite", "target": "c1", "to": "控制感回归"}
+      ],
+      "affect": {"label": "focus", "delta": 0.2, "reason": "通过行动恢复控制感"},
+      "confidence": 0.75,
+      "asserted_at": "2026-11-01T23:20:00+08:00"
+    }
+  ],
+  "memory_delta": {
+    "add": [
+      {
+        "id": "m1", "s": "u1", "p": "believes", "o": "周姐在针对我", "o_kind": "literal",
+        "source": "derived:compress", "unit_id": "u1",
+        "confidence": 0.45, "salience": 0.7,
+        "valid_from": "2026-11-01T23:40:00+08:00",
+        "asserted_at": "2026-11-01T23:40:00+08:00",
+        "memory_kind": "semantic", "decay_rate": 0.05
+      },
+      {
+        "id": "m2", "s": "u1", "p": "believes", "o": "写下第一页让我平静", "o_kind": "literal",
+        "source": "derived:compress", "unit_id": "u1",
+        "confidence": 0.65, "salience": 0.75,
+        "valid_from": "2026-11-01T23:40:00+08:00",
+        "asserted_at": "2026-11-01T23:40:00+08:00",
+        "memory_kind": "semantic", "decay_rate": 0.05
+      },
+      {
+        "id": "m3", "s": "u1", "p": "core_memory", "o": "周姐消息跳出来时，心跳漏了一拍", "o_kind": "literal",
+        "source": "derived:compress", "unit_id": "u1",
+        "confidence": 0.9, "salience": 1.0,
+        "valid_from": "2026-11-01T20:10:00+08:00",
+        "asserted_at": "2026-11-01T23:40:00+08:00",
+        "memory_kind": "imprint"
+      }
+    ]
+  },
+  "diary": {
+    "id": "di1", "unit_id": "u1", "day_index": 1,
+    "period_from": "2026-11-01T18:40:00+08:00",
+    "period_to": "2026-11-01T23:40:00+08:00",
+    "perception_ids": ["pe1", "pe2", "pe3"],
+    "text": "今天本来打算早点睡。洗完澡窝在床上打开电脑，也只是想刷一会儿——刚把电源按下去，周姐的消息就跳出来了：汇报提前到明天上午。那一瞬间我听见自己的心跳，很没道理地觉得是她故意的。\n\n嘴上回了个「好的收到」，手上还是把季度汇报的文档翻了出来。数据是齐的，但第一页的结论我一直没敢定。改到第三遍的时候，反而平静下来，像是终于有个理由可以名正言顺地不睡。\n\n十一点半，合上电脑。明天会怎样不知道，至少今晚我把第一页写完了。",
+    "created_at": "2026-11-01T23:40:00+08:00"
+  }
+}

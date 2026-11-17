@@ -29,6 +29,20 @@ def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 
+def coerce_triple(
+    value: "Triple | dict[str, Any]", *, forced_id: str | None = None
+) -> "Triple":
+    """接受 dataclass 或 dict；缺 id 时生成（或使用 forced_id）。"""
+    if isinstance(value, Triple):
+        if not value.id:
+            value.id = forced_id or new_id("tr")
+        return value
+    d = dict(value)
+    if not d.get("id"):
+        d["id"] = forced_id or new_id("tr")
+    return Triple(**d)
+
+
 def _check_unit_interval(value: float, name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise TypeError(f"{name} must be a number, got {type(value)!r}")

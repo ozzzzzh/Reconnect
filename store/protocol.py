@@ -11,7 +11,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable
 
 from .models import Diary, Entity, Event, Perception, Triple
 
@@ -87,6 +87,13 @@ class Store(ABC):
         scope:   None | 'world' | 'unit:<id>' | 'view:<id>'
         """
 
+    @abstractmethod
+    def get_triple(self, triple_id: str) -> Triple | None: ...
+
+    @abstractmethod
+    def list_revisions(self, old_id: str | None = None) -> list[dict[str, Any]]:
+        """revise 的审计记录。"""
+
     # ---- 事件 ------------------------------------------------------------
     @abstractmethod
     def apply_event(self, event: Event | dict[str, Any]) -> Event:
@@ -94,6 +101,9 @@ class Store(ABC):
 
     @abstractmethod
     def get_event(self, event_id: str) -> Event | None: ...
+
+    @abstractmethod
+    def perceptions_for_event(self, event_id: str) -> list[Perception]: ...
 
     @abstractmethod
     def list_events(self, day_index: int | None = None) -> list[Event]: ...
@@ -107,7 +117,13 @@ class Store(ABC):
     def record_perception(self, perception: Perception | dict[str, Any]) -> Perception: ...
 
     @abstractmethod
+    def get_perception(self, perception_id: str) -> Perception | None: ...
+
+    @abstractmethod
     def record_diary(self, diary: Diary | dict[str, Any]) -> Diary: ...
+
+    @abstractmethod
+    def get_diary(self, diary_id: str) -> Diary | None: ...
 
     @abstractmethod
     def log_llm_call(

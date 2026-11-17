@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterable, Iterator, Sequence
 
-from .models import Diary, Entity, Event, Perception, Triple, new_id
+from .models import Diary, Entity, Event, Perception, Triple, coerce_triple, new_id
 from .protocol import Store
 from .timeutil import norm_ts, utc_now
 
@@ -36,18 +36,6 @@ def _norm_alias(text: str) -> str:
 
 def _json_dumps(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True)
-
-
-def _to_triple(value: Triple | dict[str, Any], *, forced_id: str | None = None) -> Triple:
-    """接受 dataclass 或 dict；缺 id 时生成（或使用 forced_id）。"""
-    if isinstance(value, Triple):
-        if not value.id:
-            value.id = forced_id or new_id("tr")
-        return value
-    d = dict(value)
-    if not d.get("id"):
-        d["id"] = forced_id or new_id("tr")
-    return Triple(**d)
 
 
 class SqliteStore(Store):
@@ -168,6 +156,12 @@ class SqliteStore(Store):
         )
         if row is not None:
             return self._canonical(row["entity_id"])
+        # 显示名也可直接作为引用
+        row = self._row(
+            "SELECT id FROM entity WHERE name = ? ORDER BY id LIMIT 1", (ref,)
+        )
+        if row is not None:
+            return self._canonical(row["id"])
         return None
 
     def _alias_closure(self, ref: str) -> set[str]:
@@ -291,7 +285,7 @@ class SqliteStore(Store):
         decay_rate: float | None = None,
         validate: bool = True,
     ) -> Triple:
-        t = _to_triple(triple)
+        t = coerce_triple(triple)
         if validate:
             self._validate_triple(t)
         with self._tx():
@@ -303,7 +297,7 @@ class SqliteStore(Store):
     def assert_many(
         self, triples: Iterable[Triple | dict[str, Any]]
     ) -> list[Triple]:
-        items = [_to_triple(t) for t in triples]
+        items = [coerce_triple(t) for t in triples]
         with self._tx():
             for t in items:
                 self._validate_triple(t)
@@ -337,18 +331,19 @@ class SqliteStore(Store):
         if old.retracted_at is not None:
             raise StoreError(f"cannot revise retracted triple: {old_id}")
 
-        t = _to_triple(new_triple)
+        t = coerce_triple(new_triple)
         if t.asserted_at < old.asserted_at:
             raise StoreError("new version must be asserted at or after the old one")
         t.supersedes = old_id
         self._validate_triple(t)
 
         with self._tx():
+            # 先插入新版本：旧行的 superseded_by 外键指向它
+            self._insert_triple(t)
             self._conn.execute(
                 "UPDATE triple SET retracted_at = ?, superseded_by = ? WHERE id = ?",
                 (t.asserted_at, t.id, old_id),
             )
-            self._insert_triple(t)
             self._conn.execute(
                 "INSERT INTO revision (old_id, new_id, reason, at) VALUES (?, ?, ?, ?)",
                 (old_id, t.id, reason, t.asserted_at),
@@ -412,6 +407,8 @@ class SqliteStore(Store):
                 placeholders = ",".join("?" for _ in values)
                 where.append(f"{key} IN ({placeholders})")
                 params.extend(values)
+            elif key == "unit_id" and value is None:
+                where.append("unit_id IS NULL")
             else:
                 where.append(f"{key} = ?")
                 params.append(value)
@@ -477,6 +474,15 @@ class SqliteStore(Store):
         row = self._row("SELECT * FROM triple WHERE id = ?", (triple_id,))
         return Triple.from_row(row) if row else None
 
+    def list_revisions(self, old_id: str | None = None) -> list[dict[str, Any]]:
+        if old_id is None:
+            rows = self._rows("SELECT * FROM revision ORDER BY at ASC")
+        else:
+            rows = self._rows(
+                "SELECT * FROM revision WHERE old_id = ? ORDER BY at ASC", (old_id,)
+            )
+        return [dict(r) for r in rows]
+
     def get_memory(self, triple_id: str) -> dict[str, Any] | None:
         row = self._row("SELECT * FROM memory WHERE triple_id = ?", (triple_id,))
         return dict(row) if row else None
@@ -507,7 +513,7 @@ class SqliteStore(Store):
                 d.setdefault("source", ev.source)
                 d.setdefault("event_id", ev.id)
                 d.setdefault("asserted_at", ev.time)
-                t = _to_triple(d, forced_id=f"{ev.id}:a{idx}")
+                t = coerce_triple(d, forced_id=f"{ev.id}:a{idx}")
                 self._validate_triple(t)
                 self._insert_triple(t)
 
@@ -527,6 +533,15 @@ class SqliteStore(Store):
     def get_event(self, event_id: str) -> Event | None:
         row = self._row("SELECT * FROM event WHERE id = ?", (event_id,))
         return Event.from_row(row) if row else None
+
+    def perceptions_for_event(self, event_id: str) -> list[Perception]:
+        return [
+            Perception.from_row(r)
+            for r in self._rows(
+                "SELECT * FROM perception WHERE event_id = ? ORDER BY asserted_at ASC",
+                (event_id,),
+            )
+        ]
 
     def list_events(self, day_index: int | None = None) -> list[Event]:
         if day_index is None:
@@ -595,6 +610,14 @@ class SqliteStore(Store):
             )
         return d
 
+    def get_perception(self, perception_id: str) -> Perception | None:
+        row = self._row("SELECT * FROM perception WHERE id = ?", (perception_id,))
+        return Perception.from_row(row) if row else None
+
+    def get_diary(self, diary_id: str) -> Diary | None:
+        row = self._row("SELECT * FROM diary WHERE id = ?", (diary_id,))
+        return Diary.from_row(row) if row else None
+
     def log_llm_call(
         self,
         *,
@@ -649,9 +672,13 @@ class SqliteStore(Store):
         ]
 
         triples: list[Triple] = []
+        bounds: list[str] = []
         if events:
-            lo = min(e.time for e in events)
-            hi = max(e.time for e in events)
+            bounds.extend([min(e.time for e in events), max(e.time for e in events)])
+        if diaries:
+            bounds.extend([min(d.period_from for d in diaries), max(d.period_to for d in diaries)])
+        if bounds:
+            lo, hi = min(bounds), max(bounds)
             triples = [
                 Triple.from_row(r)
                 for r in self._rows(
@@ -688,13 +715,13 @@ class SqliteStore(Store):
                 d.setdefault("source", ev.source)
                 d.setdefault("event_id", ev.id)
                 d.setdefault("asserted_at", ev.time)
-                t = _to_triple(d, forced_id=f"{ev.id}:a{idx}")
+                t = coerce_triple(d, forced_id=f"{ev.id}:a{idx}")
                 state[t.id] = t
         return state
 
     # -------------------------------------------------------------- 统计
     def stats(self) -> dict[str, int]:
-        tables = ("entity", "triple", "event", "perception", "diary", "memory")
+        tables = ("entity", "triple", "event", "perception", "diary", "memory", "llm_call")
         return {
             table: int(self._row(f"SELECT COUNT(*) AS n FROM {table}")["n"])
             for table in tables

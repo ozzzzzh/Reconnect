@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS entity_alias (
 
 CREATE INDEX IF NOT EXISTS idx_alias_norm    ON entity_alias(norm);
 CREATE INDEX IF NOT EXISTS idx_entity_merged ON entity(merged_into);
+CREATE INDEX IF NOT EXISTS idx_entity_name   ON entity(name);
 
 -- 3.3 Event ------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS event (
