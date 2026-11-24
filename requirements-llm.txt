@@ -1,0 +1,3 @@
+# Optional: only needed for --narrator claude.
+# Offline narration (the default when no SDK/credentials are present) has no dependencies.
+anthropic>=1.0

@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "day_index": 1,
+    "unit_id": "u1",
+    "note": "M2 手写世界：只含客观实体 / 初始状态 / 事件。感知、记忆、日记由引擎生成。"
+  },
+  "entities": [
+    {"id": "u1", "type": "Unit", "name": "林晚", "aliases": ["她"]},
+    {"id": "p1", "type": "Place", "name": "卧室"},
+    {"id": "per1", "type": "Person", "name": "周姐", "aliases": ["周敏", "那个发消息的人"]},
+    {"id": "o1", "type": "Object", "name": "笔记本电脑"},
+    {"id": "c1", "type": "Concept", "name": "季度汇报"}
+  ],
+  "holdings": [
+    {
+      "id": "h1", "s": "u1", "p": "located_in", "o": "p1", "o_kind": "entity",
+      "source": "world", "confidence": 1.0, "salience": 0.4,
+      "valid_from": "2026-11-01T18:40:00+08:00",
+      "asserted_at": "2026-11-01T18:40:00+08:00"
+    },
+    {
+      "id": "h2", "s": "o1", "p": "powered_on", "o": false, "o_kind": "literal",
+      "source": "world", "confidence": 1.0, "salience": 0.3,
+      "valid_from": "2026-11-01T18:40:00+08:00",
+      "asserted_at": "2026-11-01T18:40:00+08:00"
+    },
+    {
+      "id": "h3", "s": "c1", "p": "deadline", "o": "2026-11-06", "o_kind": "literal",
+      "source": "world", "confidence": 1.0, "salience": 0.7,
+      "valid_from": "2026-11-01T09:00:00+08:00",
+      "asserted_at": "2026-11-01T09:00:00+08:00"
+    },
+    {
+      "id": "h4", "s": "per1", "p": "colleague_of", "o": "u1", "o_kind": "entity",
+      "source": "world", "confidence": 1.0, "salience": 0.5,
+      "valid_from": "2026-11-01T09:00:00+08:00",
+      "asserted_at": "2026-11-01T09:00:00+08:00"
+    }
+  ],
+  "events": [
+    {
+      "id": "e1", "time": "2026-11-01T19:00:00+08:00", "type": "occurrence",
+      "occurs": "open",
+      "roles": {"agent": "u1", "theme": "o1"},
+      "delta": {
+        "add": [
+          {
+            "s": "o1", "p": "powered_on", "o": true, "o_kind": "literal",
+            "source": "unit:u1", "salience": 0.3,
+            "valid_from": "2026-11-01T19:00:00+08:00"
+          }
+        ],
+        "retract": ["h2"]
+      },
+      "causal_parent": null,
+      "source": "unit:u1",
+      "raw_text": "她打开电脑"
+    },
+    {
+      "id": "e2", "time": "2026-11-01T20:10:00+08:00", "type": "message",
+      "occurs": "receive_message",
+      "roles": {"sender": "per1", "recipient": "u1", "theme": "c1", "channel": "手机信息流"},
+      "delta": {
+        "add": [
+          {
+            "s": "c1", "p": "deadline", "o": "2026-11-02", "o_kind": "literal",
+            "source": "unit:per1", "salience": 0.9,
+            "valid_from": "2026-11-01T20:10:00+08:00"
+          }
+        ],
+        "retract": ["h3"]
+      },
+      "causal_parent": "e1",
+      "source": "unit:per1",
+      "raw_text": "周姐：季度汇报提前到明天上午十点，今晚先过一遍第一页。"
+    },
+    {
+      "id": "e3", "time": "2026-11-01T21:00:00+08:00", "type": "occurrence",
+      "occurs": "work_on",
+      "roles": {"agent": "u1", "theme": "c1", "place": "p1", "instrument": "o1"},
+      "delta": {
+        "add": [
+          {
+            "s": "u1", "p": "focus_on", "o": "c1", "o_kind": "entity",
+            "source": "unit:u1", "salience": 0.8,
+            "valid_from": "2026-11-01T21:00:00+08:00"
+          },
+          {
+            "s": "c1", "p": "first_section_done", "o": true, "o_kind": "literal",
+            "source": "unit:u1", "salience": 0.7,
+            "valid_from": "2026-11-01T23:20:00+08:00",
+            "asserted_at": "2026-11-01T23:20:00+08:00"
+          }
+        ],
+        "retract": []
+      },
+      "causal_parent": "e2",
+      "source": "unit:u1",
+      "raw_text": "她把季度汇报的文档翻出来，改到第三遍"
+    }
+  ]
+}
